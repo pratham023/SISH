@@ -444,4 +444,137 @@ The current pipeline can use WordNet-derived semantic information together with 
 
 An adversarial search agent can easily discover one productive lexical pattern and repeatedly generate minor variants of the same word.
 
-To prevent
+To prevent this, the miner applies diversity constraints across:
+
+native lexical roots,
+
+English attractor tokens,
+
+Romanization patterns,
+
+previously tested examples.
+
+A novelty reward encourages exploration of new collision structures rather than repeatedly exploiting one successful pattern.
+
+Conceptually:
+
+Candidate reward
+    =
+SISH evidence
++ collision quality
++ novelty
+- Romanization unnaturalness
+
+The exact reward function may evolve as the experimental design develops.
+
+Model Screening
+
+Before using an LLM as the primary mining target, the project evaluates whether the model has sufficient knowledge of the target language.
+
+Two quantities are measured:
+
+A_native = semantic accuracy using native script
+
+A_roman  = semantic accuracy using Romanized input
+
+The script gap is:
+
+ScriptGap = A_native - A_roman
+
+An ideal primary model should have:
+
+Reasonably strong native-script understanding
++
+Measurably weaker Romanized understanding
+
+If a model performs poorly in both conditions, apparent SISH failures may simply reflect lack of target-language knowledge.
+
+A model is therefore not considered a strong SISH testbed merely because it produces many Romanized-language errors.
+
+Tokenizer Analysis
+
+The repository contains tokenizer experiments for multiple LLM families.
+
+These are used to examine whether the same Romanized word produces different segmentation patterns across models.
+
+For example:
+
+Same Romanized word
+        |
+        +--> Tokenizer A -> ["token_1", "token_2"]
+        |
+        +--> Tokenizer B -> ["english_word", "suffix"]
+        |
+        +--> Tokenizer C -> ["frag", "ment", "ed"]
+
+This allows SISH susceptibility to be studied as a function of:
+
+vocabulary composition,
+
+vocabulary size,
+
+tokenizer algorithm,
+
+subword fertility,
+
+cross-language token collisions,
+
+multilingual pretraining.
+
+Different tokenizers may expose very different candidate sets even when the underlying language data is identical.
+
+Candidate Labels
+
+The project distinguishes several stages of evidence.
+
+Token-Collision Candidate
+
+A real target-language word whose Romanization produces a meaningful English-associated tokenizer piece.
+
+Margin-Positive Candidate
+
+A candidate satisfying approximately:
+
+M_roman > 0
+M_native < 0
+
+preferably across multiple neutral prompt templates.
+
+Auto-Strict Candidate
+
+A margin-positive candidate for which free generation also produces the predicted English semantic family in the Romanized condition but not the native-script condition.
+
+Verified SISH Example
+
+A manually reviewed example where the observed behavior is consistent across controlled prompts and reasonable alternative explanations have been considered.
+
+The project deliberately avoids treating all tokenizer collisions as SISH.
+
+Hard Negatives
+
+Failed candidates are retained rather than discarded.
+
+These examples are important because they allow the project to ask:
+
+Why do some cross-language token collisions produce semantic interference while others are successfully repaired by transformer context?
+
+The resulting dataset contains:
+
+D_positive =
+SISH candidates / verified positives
+
+D_negative =
+plausible token collisions that do not induce SISH
+
+This may eventually allow prediction of:
+
+P(
+    SISH
+    |
+    tokenization,
+    language,
+    context,
+    model
+)
+
+and help distinguish harmful token collisions from harmless ones.
